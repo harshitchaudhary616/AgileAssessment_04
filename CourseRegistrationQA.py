@@ -1,198 +1,46 @@
+import unittest
 from CourseRegistration import CourseRegistration
 
-
-system = CourseRegistration()
-
-
-completed = [
-    "Programming",
-    "Data Structures",
-    "Statistics",
-    "Networking"
-]
-
-
-print("Test 1: Valid registration")
-
-credits = system.register_student(
-    "S101",
-    "M.Tech",
-    4,
-    ["DBMS"],
-    completed
-)
-
-assert credits == 4
-
-print("PASS")
-
-
-print("Test 2: Missing prerequisite")
-
-try:
-
-    system.register_student(
-        "S102",
-        "M.Tech",
-        4,
-        ["DBMS"],
-        []
-    )
-
-    assert False
-
-except ValueError:
-    assert True
-
-print("PASS")
-
-
-print("Test 3: Credit limit violation")
-
-try:
-
-    system.register_student(
-        "S103",
-        "M.Tech",
-        4,
-        ["DBMS", "Cloud"],
-        completed,
-        max_credits=5
-    )
-
-    assert False
-
-except ValueError:
-    assert True
-
-print("PASS")
-
-
-print("Test 4: Timetable conflict")
-
-try:
-
-    system.register_student(
-        "S104",
-        "M.Tech",
-        5,
-        ["AI", "ML"],
-        completed
-    )
-
-    assert False
-
-except ValueError:
-    assert True
-
-print("PASS")
-
-
-print("Test 5: Full course")
-
-system.courses["DBMS"]["capacity"] = 1
-
-try:
-
-    system.register_student(
-        "S105",
-        "M.Tech",
-        4,
-        ["DBMS"],
-        completed
-    )
-
-    assert False
-
-except ValueError:
-    assert True
-
-print("PASS")
-
-
-print("Test 6: Duplicate registration")
-
-try:
-
-    system.register_student(
-        "S101",
-        "M.Tech",
-        4,
-        ["DBMS"],
-        completed
-    )
-
-    assert False
-
-except ValueError:
-    assert True
-
-print("PASS")
-
-
-print("Test 7: Invalid course")
-
-try:
-
-    system.register_student(
-        "S106",
-        "M.Tech",
-        4,
-        ["CyberSecurity"],
-        completed
-    )
-
-    assert False
-
-except ValueError:
-    assert True
-
-print("PASS")
-
-
-print("Test 8: Semester restriction")
-
-try:
-
-    system.register_student(
-        "S107",
-        "M.Tech",
-        3,
-        ["DBMS"],
-        completed
-    )
-
-    assert False
-
-except ValueError:
-    assert True
-
-print("PASS")
-
-
-print("Test 9: Boundary credit value")
-
-system.courses["DBMS"]["capacity"] = 30
-
-system.register_student(
-    "S108",
-    "M.Tech",
-    4,
-    ["DBMS"],
-    completed,
-    max_credits=4
-)
-
-assert system.get_registered_credits("S108") == 4
-
-print("PASS")
-
-
-print("Test 10: Total registered credits")
-
-assert system.get_registered_credits("S101") == 4
-
-print("PASS")
-
-
-print("All Course Registration tests passed")
+class CourseRegistrationQA(unittest.TestCase):
+    def test_valid(self):
+        r=CourseRegistration()
+        x=r.register("S1","SE",5,["Programming","Networking"],["DBMS","Cloud"])
+        self.assertEqual(x["credits"],7)
+
+    def test_prerequisite(self):
+        with self.assertRaises(ValueError):
+            CourseRegistration().register("S1","SE",5,[],["DBMS"])
+
+    def test_credit_limit(self):
+        with self.assertRaises(ValueError):
+            CourseRegistration(6).register("S1","SE",5,["Programming","Networking"],["DBMS","Cloud"])
+
+    def test_clash(self):
+        with self.assertRaises(ValueError):
+            CourseRegistration().register("S1","SE",5,["Programming","Data Structures"],["DBMS","AI"])
+
+    def test_full(self):
+        r=CourseRegistration()
+        for sid in ["S1","S2"]:r.register(sid,"SE",5,["Programming"],["DBMS"])
+        with self.assertRaises(ValueError):r.register("S3","SE",5,["Programming"],["DBMS"])
+
+    def test_duplicate(self):
+        r=CourseRegistration()
+        r.register("S1","SE",5,["Programming"],["DBMS"])
+        with self.assertRaises(ValueError):r.register("S1","SE",5,["Programming"],["Cloud"])
+
+    def test_invalid_course(self):
+        with self.assertRaises(ValueError):
+            CourseRegistration().register("S1","SE",5,["Programming"],["XYZ"])
+
+    def test_semester(self):
+        with self.assertRaises(ValueError):
+            CourseRegistration().register("S1","SE",5,["Statistics"],["ML"])
+
+    def test_boundary_credit(self):
+        r=CourseRegistration(7)
+        x=r.register("S1","SE",5,["Programming","Networking"],["DBMS","Cloud"])
+        self.assertEqual(x["credits"],7)
+
+if __name__=="__main__":
+    unittest.main(verbosity=2)
